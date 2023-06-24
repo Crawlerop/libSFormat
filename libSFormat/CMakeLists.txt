@@ -9,7 +9,7 @@ project(libSFormat VERSION 1.0.0 DESCRIPTION "Samsung format library")
 add_library(${PROJECT_NAME} SHARED
     libSFormat.cpp
     libSFormat.h
- "compressLZ.h" "utils.h" "lz16_32.h" "qmd.h" "crypt.h" "qmd (2).h")
+ "compressLZ.h" "utils.h" "lz16_32.h" "qmd.h" "crypt.h" "qmr.h")
 
 # Configure the directories to search for header files.
 target_include_directories(${PROJECT_NAME} PRIVATE source)
