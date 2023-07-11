@@ -138,6 +138,7 @@ const unsigned short diffTable2[256] = // bada 2.0
 #define DECOMP_DATA2    0x205//0x0502
 
 #define MAGIC_QMD       0x00444D51 // QMD
+#define MAGIC_QMDC      0x43444D51 // QMDC
 
 //#define GET_BYTE( data, pos )           ( ( (unsigned char *)( data ) )[pos] )
 //#define GET_HALF( data, pos )           ( ( GET_BYTE ( data, ( ( pos ) + 1 ) ) << 8 ) | GET_BYTE ( data, ( pos ) ) )
@@ -345,6 +346,284 @@ namespace QMD
 
 		pos = 0;
 		pos1 = 12;
+		pos2 = pos1 + len1;
+		pos3 = pos2 + len2;
+
+		memcpy(dst + pos, src + pos3, 0x10);
+		pos += 0x10;
+		pos3 += 0x10;
+
+		count = len0 >> 4;
+		while (--count)
+		{
+			while (BitCount <= 2)
+			{
+				if (pos1 < pos2)
+				{
+					BitOperation |= BYTE(src, pos1) << (0x18 - BitCount);
+					pos1++;
+				}
+
+				BitCount += 8;
+			}
+
+			BitCount--;
+
+			if (0 == (BitOperation & 0x80000000)) // bit unset
+			{
+				int i;
+
+				BitOperation <<= 1;
+
+				if (0 == (BitOperation & 0x80000000)) // bit unset
+				{
+					memcpy(dst + pos, src + pos3, 0x10);
+					pos += 0x10;
+					pos3 += 0x10;
+				}
+				else for (i = 0; i < 8; i++) // bit set
+				{
+					int off = OffsetDivOn2 << mode;
+					BYTE(dst, pos) = BYTE(dst, pos - off);
+					pos++;
+					BYTE(dst, pos) = BYTE(dst, pos - off);
+					pos++;
+				}
+
+				BitOperation <<= 1;
+				BitCount--;
+			}
+			else // bit set
+			{
+				unsigned int i, b2 = BYTE(src, pos2);
+				pos2++;
+
+				BitOperation <<= 1;
+
+				while (BitCount <= 0x10)
+				{
+					if (pos1 < pos2)
+					{
+						BitOperation |= BYTE(src, pos1) << (0x18 - BitCount);
+						pos1++;
+					}
+
+					BitCount += 8;
+				}
+
+				for (i = 0; i < 8; i++)
+				{
+					if (0 == (i & 1)) // 0 2 4 6
+					{
+						if (0 == (BitOperation & 0x80000000)) // bit unset
+						{
+							BitOperation <<= 1;
+							BitCount--;
+
+							if (0 == (BitOperation & 0x80000000)) // bit unset
+							{
+								OffsetDivOn2 = HALF(src, pos3);
+								pos3 += 2;
+							}
+							else // bit set
+							{
+								OffsetDivOn2 = BYTE(src, pos2);
+								pos2++;
+							}
+						}
+
+						BitCount--;
+						BitOperation <<= 1;
+					}
+
+					if (b2 & (0x80 >> i)) // bit set
+					{
+						int off = OffsetDivOn2 << mode;
+						BYTE(dst, pos) = BYTE(dst, pos - off);
+						pos++;
+						BYTE(dst, pos) = BYTE(dst, pos - off);
+						pos++;
+					}
+					else // bit unset
+					{
+						if (0 == (BitOperation & 0x80000000)) // bit unset
+						{
+							int off = OffsetDivOn2 << mode;
+							unsigned short c = diffTable[mode][BYTE(src, pos2)];
+							pos2++;
+							BYTE(dst, pos) = BYTE(dst, pos - off) ^ c;
+							pos++;
+							BYTE(dst, pos) = BYTE(dst, pos - off) ^ (c >> 8);
+							pos++;
+						}
+						else // bit set
+						{
+							HALF(dst, pos) = HALF(src, pos3);
+							pos += 2;
+							pos3 += 2;
+						}
+
+						BitCount--;
+						BitOperation <<= 1;
+					}
+				}
+			}
+		}
+
+		return len0;
+	}
+
+	unsigned int decompress_qmdc(unsigned char* dst, unsigned char* src, unsigned int mode /*, BackgroundWorker ^ bwAsync*/)
+	{
+		unsigned int BitOperation = 0, BitCount = 0, OffsetDivOn2 = 1, pos, pos1, pos2, pos3;
+		unsigned int len0, len1, len2, count;
+
+		if (MAGIC_QMDC != WORD(src, 0x0)) return 0;
+
+		len0 = WORD(src, 0x8);
+		len1 = WORD(src, 0xc);
+		len2 = WORD(src, 0x10);
+
+		pos = 0;
+		pos1 = 0x14;
+		pos2 = pos1 + len1;
+		pos3 = pos2 + len2;
+
+		memcpy(dst + pos, src + pos3, 0x10);
+		pos += 0x10;
+		pos3 += 0x10;
+
+		count = len0 >> 4;
+		while (--count)
+		{
+			while (BitCount <= 2)
+			{
+				if (pos1 < pos2)
+				{
+					BitOperation |= BYTE(src, pos1) << (0x18 - BitCount);
+					pos1++;
+				}
+
+				BitCount += 8;
+			}
+
+			BitCount--;
+
+			if (0 == (BitOperation & 0x80000000)) // bit unset
+			{
+				int i;
+
+				BitOperation <<= 1;
+
+				if (0 == (BitOperation & 0x80000000)) // bit unset
+				{
+					memcpy(dst + pos, src + pos3, 0x10);
+					pos += 0x10;
+					pos3 += 0x10;
+				}
+				else for (i = 0; i < 8; i++) // bit set
+				{
+					int off = OffsetDivOn2 << mode;
+					BYTE(dst, pos) = BYTE(dst, pos - off);
+					pos++;
+					BYTE(dst, pos) = BYTE(dst, pos - off);
+					pos++;
+				}
+
+				BitOperation <<= 1;
+				BitCount--;
+			}
+			else // bit set
+			{
+				unsigned int i, b2 = BYTE(src, pos2);
+				pos2++;
+
+				BitOperation <<= 1;
+
+				while (BitCount <= 0x10)
+				{
+					if (pos1 < pos2)
+					{
+						BitOperation |= BYTE(src, pos1) << (0x18 - BitCount);
+						pos1++;
+					}
+
+					BitCount += 8;
+				}
+
+				for (i = 0; i < 8; i++)
+				{
+					if (0 == (i & 1)) // 0 2 4 6
+					{
+						if (0 == (BitOperation & 0x80000000)) // bit unset
+						{
+							BitOperation <<= 1;
+							BitCount--;
+
+							if (0 == (BitOperation & 0x80000000)) // bit unset
+							{
+								OffsetDivOn2 = HALF(src, pos3);
+								pos3 += 2;
+							}
+							else // bit set
+							{
+								OffsetDivOn2 = BYTE(src, pos2);
+								pos2++;
+							}
+						}
+
+						BitCount--;
+						BitOperation <<= 1;
+					}
+
+					if (b2 & (0x80 >> i)) // bit set
+					{
+						int off = OffsetDivOn2 << mode;
+						BYTE(dst, pos) = BYTE(dst, pos - off);
+						pos++;
+						BYTE(dst, pos) = BYTE(dst, pos - off);
+						pos++;
+					}
+					else // bit unset
+					{
+						if (0 == (BitOperation & 0x80000000)) // bit unset
+						{
+							int off = OffsetDivOn2 << mode;
+							unsigned short c = diffTable[mode][BYTE(src, pos2)];
+							pos2++;
+							BYTE(dst, pos) = BYTE(dst, pos - off) ^ c;
+							pos++;
+							BYTE(dst, pos) = BYTE(dst, pos - off) ^ (c >> 8);
+							pos++;
+						}
+						else // bit set
+						{
+							HALF(dst, pos) = HALF(src, pos3);
+							pos += 2;
+							pos3 += 2;
+						}
+
+						BitCount--;
+						BitOperation <<= 1;
+					}
+				}
+			}
+		}
+
+		return len0;
+	}
+
+	unsigned int decompress_raw(unsigned char* dst, unsigned char* src, unsigned int mode, unsigned int raw_size, unsigned int bits_size1, unsigned int bits_size2 /*, BackgroundWorker ^ bwAsync*/)
+	{
+		unsigned int BitOperation = 0, BitCount = 0, OffsetDivOn2 = 1, pos, pos1, pos2, pos3;
+		unsigned int len0, len1, len2, count;
+
+		len0 = raw_size;
+		len1 = bits_size1;
+		len2 = bits_size2;
+
+		pos = 0;
+		pos1 = 0;
 		pos2 = pos1 + len1;
 		pos3 = pos2 + len2;
 

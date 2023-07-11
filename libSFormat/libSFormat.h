@@ -52,6 +52,12 @@ extern "C" {
 				return 0;
 		}
 	};
+	EXPORT unsigned int QMDC_decompress(unsigned char* src, unsigned char* dst, unsigned int mode) {
+		return QMD::decompress_qmdc(dst, src, mode);
+	};
+	EXPORT unsigned int QMD_decompress_raw(unsigned char* src, unsigned char* dst, unsigned int mode, unsigned int raw_size, unsigned int block_size_1, unsigned int block_size_2) {
+		return QMD::decompress_raw(dst, src, mode, raw_size, block_size_1, block_size_2);
+	};
 	EXPORT void TKT_decrypt(unsigned char* src, unsigned int len) {
 		SFCrypto::decrypt(src, len, false);
 	};
