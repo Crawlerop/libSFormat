@@ -10,3 +10,8 @@
 #define SET_BYTE( data, pos, val )      do { ( (unsigned char *)( data ) )[pos] = val; } while ( 0 )
 #define SET_HALF( data, pos, val )      do { SET_BYTE ( data, ( pos ) + 1, ( ( val ) >> 8 ) & 0xFF ); SET_BYTE ( data, ( pos ), ( val ) & 0xFF ); } while ( 0 )
 #define SET_WORD( data, pos, val )      do { SET_HALF ( data, ( pos ) + 2, ( ( val ) >> 16 ) & 0xFFFF ); SET_HALF ( data, ( pos ), ( val ) & 0xFFFF ); } while ( 0 )
+
+#define GET_HALF_BIG( data, pos )           ( ( GET_BYTE ( data, ( ( pos ) ) ) << 8 ) | GET_BYTE ( data, ( pos + 1 ) ) )
+#define GET_WORD_BIG( data, pos )           ( ( GET_HALF ( data, ( ( pos ) ) ) << 16 )| GET_HALF ( data, ( pos + 2 ) ) )
+#define SET_HALF_BIG( data, pos, val )      do { SET_BYTE ( data, ( pos ), ( ( val ) >> 8 ) & 0xFF ); SET_BYTE ( data, ( pos + 1 ), ( val ) & 0xFF ); } while ( 0 )
+#define SET_WORD_BIG( data, pos, val )      do { SET_HALF ( data, ( pos ), ( ( val ) >> 16 ) & 0xFFFF ); SET_HALF ( data, ( pos + 2 ), ( val ) & 0xFFFF ); } while ( 0 )
