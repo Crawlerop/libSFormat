@@ -34,6 +34,9 @@ extern "C" {
 	EXPORT unsigned int LZ16_decompress(unsigned char* src, unsigned char* dst) {
 		return LZIMG::LZ16_decompress(src, dst);
 	};
+	EXPORT unsigned int LZ16_decompress_be(unsigned char* src, unsigned char* dst) {
+		return LZIMG::LZ16_decompress_big(src, dst);
+	};
 	EXPORT unsigned int LZ32_decompress(unsigned char* src, unsigned char* dst) {
 		return LZIMG::LZ32_decompress(src, dst);
 	};
