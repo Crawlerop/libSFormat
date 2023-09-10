@@ -50,6 +50,8 @@ extern "C" {
 	*/
 	EXPORT unsigned int QMD_decompress_data(unsigned char* src, unsigned char* dst, unsigned int mode, unsigned int version) {
 		switch (version) {
+			case 0:
+				return QMD::decompress0(dst, src, mode);
 			case 1:
 				return QMD::decompress1(dst, src, mode);
 			case 2:
